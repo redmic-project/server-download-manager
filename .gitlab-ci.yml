@@ -1,0 +1,28 @@
+include:
+  - project: 'redmic-project/gitlab-ci-templates'
+    ref: master
+    file: '/maven-building-microservice.yml'
+  - project: 'redmic-project/gitlab-ci-templates'
+    ref: master
+    file: '/license-listing.yml'
+  - project: 'redmic-project/gitlab-ci-templates'
+    ref: master
+    file: '/packaging.yml'
+  - project: 'redmic-project/gitlab-ci-templates'
+    ref: master
+    file: '/deployment.yml'
+
+stages:
+  - build
+  - license-list
+  - package
+  - test-package
+  - deploy
+
+variables:
+  DOCKER_BUILD_ARGS: --build-arg PARENT_IMAGE_NAME=${REDMIC_SERVER_IMAGE_NAME} --build-arg PARENT_IMAGE_TAG=${REDMIC_SERVER_IMAGE_TAG}
+  STACK: download-manager
+
+.deploy:
+  environment:
+    url: https://${PUBLIC_HOSTNAME}/api/${CI_PROJECT_NAME}
