@@ -1,0 +1,4 @@
+services:
+  download-manager:
+    environment:
+      SPRING_PROFILES_ACTIVE: pre

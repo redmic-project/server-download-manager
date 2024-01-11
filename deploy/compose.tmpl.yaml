@@ -1,0 +1,50 @@
+services:
+  download-manager:
+    image: ${IMAGE_NAME:-registry.gitlab.com/redmic-project/server/download-manager}:${IMAGE_TAG:-latest}
+    environment:
+      JAVA_OPTS:
+    networks:
+      redmic-net:
+      metric-net:
+      traefik-net:
+    healthcheck:
+      test: wget --spider -q http://localhost:${MICROSERVICE_PORT}/api/${MICROSERVICE_NAME}/actuator/health
+      interval: ${HEALTHCHECK_INTERVAL:-30s}
+      timeout: ${HEALTHCHECK_TIMEOUT:-10s}
+      retries: ${HEALTHCHECK_RETRIES:-5}
+      start_period: ${HEALTHCHECK_START_PERIOD:-2m}
+    deploy:
+      mode: replicated
+      replicas: ${REPLICAS:-1}
+      restart_policy:
+        delay: ${RESTART_DELAY:-1m}
+      update_config:
+        delay: ${UPDATE_DELAY:-2m}
+      labels:
+        traefik.enable: ${TRAEFIK_ENABLE:-true}
+        traefik.http.routers.download-manager.entrypoints: ${TRAEFIK_ENTRYPOINT:-http}
+        traefik.http.routers.download-manager.rule: (Host(`${PUBLIC_HOSTNAME}`) || Host(`${TRAEFIK_SUBDOMAIN}.${PUBLIC_HOSTNAME}`)) && PathPrefix(`/api/${MICROSERVICE_NAME}`)
+        traefik.http.services.download-manager.loadbalancer.server.port: ${MICROSERVICE_PORT}
+      resources:
+        limits:
+          cpus: '${RESOURCES_LIMITS_CPUS:-0.5}'
+          memory: ${RESOURCES_LIMITS_MEMORY:-512M}
+        reservations:
+          cpus: '${RESOURCES_RESERVATIONS_CPUS:-0.001}'
+          memory: ${RESOURCES_RESERVATIONS_MEMORY:-410M}
+
+networks:
+  redmic-net:
+    name: ${REDMIC_NET_NAME:-redmic-net}
+    driver: ${REDMIC_NET_DRIVER:-overlay}
+    external: true
+
+  metric-net:
+    name: ${METRIC_NET_NAME:-metric-net}
+    driver: ${METRIC_NET_DRIVER:-overlay}
+    external: true
+
+  traefik-net:
+    name: ${TRAEFIK_NET_NAME:-traefik-net}
+    driver: ${TRAEFIK_NET_DRIVER:-overlay}
+    external: true
